@@ -1,0 +1,40 @@
+{
+  "manifest_version": 2,
+  "name": "dfx-report-work",
+  "version": "1.0",
+  "description": "鼎富工时上报",
+  "browser_action": {
+    "default_icon": "images/logo.png",
+    "default_title": "鼎富工时上报",
+    "default_popup": "popup.html"
+  },
+  "offline_enabled": true,
+  "permissions": [
+    "activeTab",
+    "cookies",
+    "tabs",
+    "webNavigation",
+    "http://*/*",
+    "https://*/*",
+    "background",
+    "storage"
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "content_scripts": [
+    {
+      "matches": ["http://eoms.ultrapower.com.cn/*"],
+      "js": [
+        "js/qs.js",
+        "js/axios.min.js",
+        "js/vue.min.js",
+        "js/element-ui.js",
+        "js/dayjs.min.js",
+        "js/content.js"
+      ],
+      "css": ["css/element-ui.css"],
+      "run_at": "document_end",
+      "exclude_globs": [],
+      "include_globs": ["*"]
+    }
+  ]
+}

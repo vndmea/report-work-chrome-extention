@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>鼎富工时上报</title>
+  <link rel="stylesheet" href="./css/element-ui.css">
+  <style>
+    .el-select--small {
+      width: 160px;
+    }
+    .el-col .el-form-item--mini.el-form-item, .el-col .el-form-item--small.el-form-item {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+
+<body style='height: 800px; width: 680px; padding:5px 20px;margin: 0 0 10px;'>
+  <div id="app">
+    <el-steps :active="activeStep" style="width: 70%; margin: 0 auto 30px;">
+      <el-step title="第一步"></el-step>
+      <el-step title="第二步"></el-step>
+    </el-steps>
+
+    <!-- pertitle: 日志标题 -->
+    <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="110px" size="small" v-if="activeStep===1">
+      <el-form-item label="标题" prop="pertitle">
+        <el-input v-model="ruleForm.pertitle" placeholder="这里填写日志标题"></el-input>
+      </el-form-item>
+      <el-form-item label="填报日志日期" prop="perworktype3">
+        <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
+        <el-checkbox-group v-model="checkedDates" @change="handleCheckedCitiesChange">
+          <el-checkbox v-for="date in calendarInfoList" :label="date.tdate" :key="date.tdate"
+            :disabled="!availableDates.includes(date.tdate)">{{date.tdate}}</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+      <!-- perworktype1: 工作类型 -->
+      <el-form-item label="工作类型" prop="perworktype3">
+        <!-- perworktype1: 工作 / 休息 -->
+        <el-select v-model="ruleForm.perworktype1" placeholder="请选择" class="perworktype"
+          @change="getWorktypeInfo(2, ruleForm.perworktype1)">
+          <el-option label="工作" value="110000"></el-option>
+          <el-option label="休息" value="120000"></el-option>
+        </el-select>
+        <!-- perworktype2 -->
+        <el-select v-model="ruleForm.perworktype2" placeholder="请选择" class="perworktype"
+          @change="getWorktypeInfo(3, ruleForm.perworktype2)">
+          <el-option v-for="i in perworkData" :key="i.code" :label="i.cname" :value="i.code">
+          </el-option>
+        </el-select>
+        <!-- perworktype3 -->
+        <el-select v-model="ruleForm.perworktype3" placeholder="请选择" class="perworktype">
+          <el-option v-for="i in perworkData1" :key="i.code" :label="i.cname" :value="i.code">
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <!-- pergltype: 关联类型 -->
+      <el-form-item label="关联类型" required>
+        <el-select v-model="ruleForm.pergltype" placeholder="请选择" style="width: 100%" @change="handleChangePergltype">
+          <el-option label="项目" value="项目"></el-option>
+          <el-option label="部门" value="部门"></el-option>
+        </el-select>
+      </el-form-item>
+      <!-- perglname: 部门名称 -->
+      <el-form-item label="部门名称" v-if="ruleForm.pergltype === '部门'">
+        <el-input readonly v-model="ruleForm.perglname" placeholder="部门名称"></el-input>
+      </el-form-item>
+      <!-- perglid: 部门ID -->
+      <el-form-item label="部门ID" v-if="ruleForm.pergltype === '部门'">
+        <el-input readonly v-model="ruleForm.perglid" placeholder="部门ID"></el-input>
+      </el-form-item>
+      <!-- perglid: 项目编号 -->
+      <el-form-item label="项目编号" v-if="ruleForm.pergltype === '项目'">
+        <el-select v-model="ruleForm.perglid" placeholder="请选择" style="width: 100%"
+          @change="handlePergl(ruleForm.perglid)">
+          <el-option label="YF-M-2021-0008-L1" value="YF-M-2021-0008-L1"></el-option>
+          <el-option label="YF-M-2021-0008-L2" value="YF-M-2021-0008-L2"></el-option>
+        </el-select>
+      </el-form-item>
+      <!-- perglname: 项目名称 -->
+      <el-form-item label="项目名称" v-if="ruleForm.pergltype === '项目'">
+        <el-input readonly v-model="ruleForm.perglname" placeholder="项目名称"></el-input>
+      </el-form-item>
+      <!-- pertext: 内容 -->
+      <el-form-item label="内容" prop="pertext">
+        <el-input type="textarea" maxlength="1000" show-word-limit :autosize="{ minRows: 3, maxRows: 3 }"
+          v-model="ruleForm.pertext"></el-input>
+      </el-form-item>
+      <!-- 按钮 -->
+      <el-form-item>
+        <el-button type="primary" :disabled="saveLogsDisabled" @click="submitForm('ruleForm')">填报日志
+        </el-button>
+        <el-button @click="nextStep">下一步
+        </el-button>
+      </el-form-item>
+    </el-form>
+
+    <el-form :model="ruleFormOfReport" :rules="rules" ref="ruleFormOfReport" label-width="110px" size="small" v-else>
+      <!-- 报工日期 -->
+      <el-form-item label="报工日期" required>
+        <el-col :span="6">
+          <!-- datefrom -->
+          <el-form-item prop="datefrom">
+            <el-date-picker type="date" format="yyyy-MM-dd" value-format="yyyy-MM-dd" placeholder="选择日期"
+              v-model="ruleFormOfReport.datefrom" style="width: 100%;"></el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col style="text-align: center" :span="1">-</el-col>
+        <el-col :span="6">
+          <!-- dateto -->
+          <el-form-item prop="dateto">
+            <el-date-picker type="date" placeholder="选择日期" format="yyyy-MM-dd" value-format="yyyy-MM-dd"
+              v-model="ruleFormOfReport.dateto" style="width: 100%;"></el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-form-item>
+      <!-- 工作地点 -->
+      <el-form-item label="工作地点" prop="batchworkplace2">
+        <!-- batchworkplace1 -->
+        <el-select v-model="ruleFormOfReport.batchworkplace1" placeholder="请选择工作地点"
+          @change="getCity(2, ruleFormOfReport.batchworkplace1)">
+          <el-option v-for="i in provinceData" :key="i.code" :label="i.cname" :value="i.code"></el-option>
+        </el-select>
+        <!-- batchworkplace2 -->
+        <el-select v-model="ruleFormOfReport.batchworkplace2" placeholder="请选择工作地点">
+          <el-option v-for="i in cityData" :key="i.code" :label="i.cname" :value="i.code"></el-option>
+        </el-select>
+      </el-form-item>
+      <!-- batchrjrole: 项目角色 -->
+      <el-form-item label="项目角色">
+        <el-select v-model="ruleFormOfReport.batchrjrole" placeholder="请选择项目角色">
+          <el-option label="无" value=""></el-option>
+          <el-option label="项目经理" value="项目经理"></el-option>
+          <el-option label="需求经理" value="需求经理"></el-option>
+          <el-option label="开发经理" value="开发经理"></el-option>
+          <el-option label="技术总监" value="技术总监"></el-option>
+          <el-option label="实施人员" value="实施人员"></el-option>
+          <el-option label="需求人员" value="需求人员"></el-option>
+          <el-option label="开发人员" value="开发人员"></el-option>
+          <el-option label="测试人员" value="测试人员"></el-option>
+          <el-option label="售前人员" value="售前人员"></el-option>
+          <el-option label="QA" value="QA"></el-option>
+          <el-option label="销售" value="销售"></el-option>
+          <el-option label="部门经理" value="部门经理"></el-option>
+          <el-option label="项目运营" value="项目运营"></el-option>
+        </el-select>
+      </el-form-item>
+      <!-- batchrjistravel: 是否出差 -->
+      <el-form-item label="是否出差" prop="batchrjistravel">
+          <el-radio-group v-model="ruleFormOfReport.batchrjistravel">
+            <el-radio label="是">是</el-radio>
+            <el-radio label="否">否</el-radio>
+          </el-radio-group>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="submitFormOfReport">完成报工</el-button>
+        <el-button @click="prevStep">上一步
+        </el-button>
+      </el-form-item>
+    </el-form>
+  </div>
+
+  <script src="./js/vue.min.js"></script>
+  <script src="./js/element-ui.js"></script>
+  <script src="./js/axios.min.js"></script>
+  <script src="./js/qs.js"></script>
+  <script src="./js/dayjs.min.js"></script>
+  <script src="./js/content.js"></script>
+
+</body>
+
+</html>
