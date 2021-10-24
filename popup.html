@@ -101,8 +101,8 @@
       <el-form-item>
         <el-button type="primary" :disabled="saveLogsDisabled" @click="submitForm('ruleForm')">填报日志
         </el-button>
-        <el-button @click="nextStep">下一步
-        </el-button>
+        <el-button @click="nextStep">下一步</el-button>
+        <el-button @click="window.open('http://eoms.ultrapower.com.cn/ultrasoa/reportwork/ReportWork')">去系统报工页面</el-button>
       </el-form-item>
     </el-form>
 
@@ -165,8 +165,8 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="submitFormOfReport">完成报工</el-button>
-        <el-button @click="prevStep">上一步
-        </el-button>
+        <el-button @click="prevStep">上一步</el-button>
+        <el-button @click="window.open('http://eoms.ultrapower.com.cn/ultrasoa/reportwork/ReportWork')">去系统报工页面</el-button>
       </el-form-item>
     </el-form>
   </div>
