@@ -23,14 +23,18 @@
       padding-left: 12px;
       padding-right: 12px;
     }
+
+    .el-step__title {
+      font-size: 14px;
+    }
   </style>
 </head>
 
-<body style='height: 800px; width: 680px; padding:5px 20px;margin: 0 0 10px;'>
+<body style='height: 800px; width: 680px; padding:5px 20px;margin: 0 0 50px;'>
   <div id="app">
-    <el-steps :active="activeStep" style="width: 70%; margin: 0 auto 30px;">
-      <el-step title="第一步"></el-step>
-      <el-step title="第二步"></el-step>
+    <el-steps :active="activeStep" style="width: 70%; margin: 20px auto;">
+      <el-step title="填写日志" icon="el-icon-edit-outline"></el-step>
+      <el-step title="完成报工" icon="el-icon-circle-check"></el-step>
     </el-steps>
 
     <!-- pertitle: 日志标题 -->
@@ -38,7 +42,7 @@
       <el-form-item label="标题" prop="pertitle">
         <el-input v-model="ruleForm.pertitle" placeholder="这里填写日志标题"></el-input>
       </el-form-item>
-      <el-form-item label="填报日志日期">
+      <el-form-item label="日期">
         <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
         <el-checkbox-group v-model="checkedDates" @change="handleCheckedCitiesChange">
           <el-checkbox v-for="date in calendarInfoList" :label="date.tdate" :key="date.tdate"
@@ -102,7 +106,8 @@
         <el-button type="primary" :disabled="saveLogsDisabled" @click="submitForm('ruleForm')">填报日志
         </el-button>
         <el-button @click="nextStep">下一步</el-button>
-        <el-button @click="window.open('http://eoms.ultrapower.com.cn/ultrasoa/reportwork/ReportWork')">去系统报工页面</el-button>
+        <el-button @click="window.open('http://eoms.ultrapower.com.cn/ultrasoa/reportwork/ReportWork')">去系统报工页面
+        </el-button>
       </el-form-item>
     </el-form>
 
@@ -166,7 +171,8 @@
       <el-form-item>
         <el-button type="primary" @click="submitFormOfReport">完成报工</el-button>
         <el-button @click="prevStep">上一步</el-button>
-        <el-button @click="window.open('http://eoms.ultrapower.com.cn/ultrasoa/reportwork/ReportWork')">去系统报工页面</el-button>
+        <el-button @click="window.open('http://eoms.ultrapower.com.cn/ultrasoa/reportwork/ReportWork')">去系统报工页面
+        </el-button>
       </el-form-item>
     </el-form>
   </div>
