@@ -76,6 +76,10 @@ new Vue({
       provinceData: [],
       reportDate: "",
       JSESSIONID: "",
+      perworkData0: [
+        { code: "110000", cname: "工作" },
+        { code: "120000", cname: "休息" },
+      ],
       perworkData: [],
       perworkData1: [],
       prevDataList: [],
@@ -86,6 +90,7 @@ new Vue({
         current: { y: 2021, m: 5, s: 1, e: 25 },
         next: { y: 2021, m: 6, s: 1, e: 25 },
       },
+      pickerOptions: {},
     };
   },
   computed: {
@@ -136,6 +141,12 @@ new Vue({
       this.reportDate = data;
       this.ruleFormOfReport.datefrom = data.slice(0, 10);
       this.ruleFormOfReport.dateto = data.slice(12);
+      this.pickerOptions.disabledDate = (time) => {
+        return (
+          dayjs(time).isBefore(dayjs(this.ruleFormOfReport.datefrom)) ||
+          dayjs(time).isAfter(dayjs(this.ruleFormOfReport.dateto))
+        );
+      };
     },
     // 分拆函数，设置报工区间
     setReportDateRange(data) {
@@ -257,6 +268,33 @@ new Vue({
         this.ruleForm.pertext = "文本机器人研发配置";
       }
     },
+    getPerworktype(type, code) {
+      var list = [];
+      switch (type) {
+        case 1:
+          list = this.perworkData0;
+          break;
+        case 2:
+          list = this.perworkData;
+          break;
+        case 3:
+          list = this.perworkData1;
+          break;
+      }
+      return list.find((item) => item.code === code).cname;
+    },
+    getBatchworkplace(type, code) {
+      var list = [];
+      switch (type) {
+        case 1:
+          list = this.provinceData;
+          break;
+        case 2:
+          list = this.cityData;
+          break;
+      }
+      return list.find((item) => item.code === code).cname;
+    },
     //提交填报日志表单
     submitForm() {
       if (!this.checkedDates.length) {
@@ -265,32 +303,58 @@ new Vue({
       }
       this.$refs["ruleForm"].validate((valid) => {
         if (valid) {
-          const { pergltype, perglname } = this.ruleForm;
+          const {
+            pergltype,
+            perglname,
+            pertitle,
+            pertext,
+            perglid,
+            perworktype1,
+            perworktype2,
+            perworktype3,
+          } = this.ruleForm;
+          const dateStr = this.checkedDates
+            .map((i) => i.slice(5).replace("-", "/"))
+            .join(", ");
+
           this.$confirm(
-            `请确认是否填报【${pergltype}】【${perglname}】`,
-            "填报确认",
+            `【标题】：${pertitle}<br>
+            【填报日期】：${dateStr}<br>
+            【工作类型】：
+            ${this.getPerworktype(1, perworktype1)} -
+            ${this.getPerworktype(2, perworktype2)} -
+            ${this.getPerworktype(3, perworktype3)}<br>
+            【关联类型】：${pergltype} - ${perglid} - ${perglname}<br>
+            【内容】：${pertext}`,
+            "确认日志填报内容",
             {
-              confirmButtonText: "确定",
+              dangerouslyUseHTMLString: true,
+              confirmButtonText: "提交",
               cancelButtonText: "取消",
               type: "success",
             }
-          ).then(() => {
-            return Promise.all(
-              this.checkedDates.map((item) => {
-                this.ruleForm.dqdate = item;
-                this.ruleForm.perdate = item;
-                return axios.post(baseUrl + "savePersonLogs", {
-                  rwPerson: this.ruleForm,
-                });
-              })
-            ).then(() => {
+          )
+            .then(() => {
+              return Promise.all(
+                this.checkedDates.map((item) => {
+                  this.ruleForm.dqdate = item;
+                  this.ruleForm.perdate = item;
+                  return axios.post(baseUrl + "savePersonLogs", {
+                    rwPerson: this.ruleForm,
+                  });
+                })
+              );
+            })
+            .then(() => {
               // 刷新列表
               this.getCalendarInfo();
               this.checkedDates = [];
               this.isIndeterminate = false;
               this.$message.success("填报日志成功");
+            })
+            .catch((error) => {
+              console.log(error.message);
             });
-          });
         }
       });
     },
@@ -347,8 +411,37 @@ new Vue({
     submitFormOfReport() {
       this.$refs["ruleFormOfReport"].validate((valid) => {
         if (valid) {
-          axios
-            .post(baseUrl + "batchReportJob", this.ruleFormOfReport)
+          const {
+            datefrom,
+            dateto,
+            batchworkplace1,
+            batchworkplace2,
+            batchrjrole,
+            batchrjistravel,
+          } = this.ruleFormOfReport;
+          this.$confirm(
+            `【报工日期】：
+            ${datefrom.replace("-", "/")} - 
+            ${dateto.replace("-", "/")}<br>
+            【工作地点】：
+            ${this.getBatchworkplace(1, batchworkplace1)} - 
+            ${this.getBatchworkplace(2, batchworkplace2)}<br>
+            【项目角色】：${batchrjrole}<br>
+            【是否出差】：${batchrjistravel}`,
+            "确认报工内容",
+            {
+              dangerouslyUseHTMLString: true,
+              confirmButtonText: "完成报工",
+              cancelButtonText: "取消",
+              type: "success",
+            }
+          )
+            .then(() => {
+              return axios.post(
+                baseUrl + "batchReportJob",
+                this.ruleFormOfReport
+              );
+            })
             .then(() => {
               return this.$confirm(
                 "报工最终以PMO为考勤结果，是否前往查看",
