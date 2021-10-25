@@ -132,11 +132,6 @@ new Vue({
         this.getCalendarInfo();
       })
       .catch(({ message }) => {
-        this.$message({
-          message: "未登录或数据异常，请先登录或联系前端同学",
-          type: "error",
-          duration: 0,
-        });
         console.log("error: getPLReportDate", message);
       });
   },
