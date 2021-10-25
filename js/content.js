@@ -421,8 +421,8 @@ new Vue({
           } = this.ruleFormOfReport;
           this.$confirm(
             `【报工日期】：
-            ${datefrom.replace("-", "/")} - 
-            ${dateto.replace("-", "/")}<br>
+            ${datefrom.replaceAll("-", "/")} - 
+            ${dateto.replaceAll("-", "/")}<br>
             【工作地点】：
             ${this.getBatchworkplace(1, batchworkplace1)} - 
             ${this.getBatchworkplace(2, batchworkplace2)}<br>
