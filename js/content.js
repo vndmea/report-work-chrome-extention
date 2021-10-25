@@ -132,6 +132,11 @@ new Vue({
         this.getCalendarInfo();
       })
       .catch(({ message }) => {
+        this.$message({
+          message: "未登录或数据异常，请先登录或联系前端同学",
+          type: "error",
+          duration: 0,
+        });
         console.log("error: getPLReportDate", message);
       });
   },
@@ -350,7 +355,7 @@ new Vue({
               this.getCalendarInfo();
               this.checkedDates = [];
               this.isIndeterminate = false;
-              this.$message.success("填报日志成功");
+              this.$message.warning("填报日志成功，请点击【下一步】进入批量报工页面完成报工");
             })
             .catch((error) => {
               console.log(error.message);
